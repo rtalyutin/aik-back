@@ -37,3 +37,10 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = ["app.*"]
 strict = true
+
+[tool.pytest.ini_options]
+addopts = "-q"
+asyncio_mode = "auto"
+testpaths = [
+    "tests",
+]

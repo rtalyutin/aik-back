@@ -1,0 +1,447 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Karaoke Backend",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "responses": {
+          "200": {
+            "description": "List jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook/asr": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ASRWebhookPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ASRWebhookResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "created",
+          "uploading",
+          "splitting",
+          "waiting_asr",
+          "aligning",
+          "completed",
+          "failed"
+        ]
+      },
+      "AssetType": {
+        "type": "string",
+        "enum": [
+          "original",
+          "minus",
+          "vocals",
+          "lyrics",
+          "metadata"
+        ]
+      },
+      "MetricType": {
+        "type": "string",
+        "enum": [
+          "split",
+          "asr",
+          "align"
+        ]
+      },
+      "EnhancedLRCLine": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number"
+          },
+          "end": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "text"
+        ]
+      },
+      "EnhancedLRC": {
+        "type": "object",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnhancedLRCLine"
+            }
+          }
+        },
+        "required": [
+          "lines"
+        ]
+      },
+      "PresignedUploadOut": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expires_in": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "url",
+          "fields",
+          "expires_in"
+        ]
+      },
+      "AssetOut": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/AssetType"
+          },
+          "url": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "url",
+          "key"
+        ]
+      },
+      "MetricOut": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/MetricType"
+          },
+          "name": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "payload",
+          "created_at"
+        ]
+      },
+      "ProgressOut": {
+        "type": "object",
+        "properties": {
+          "split": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "asr": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "align": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "split",
+          "asr",
+          "align"
+        ]
+      },
+      "JobCreateRequest": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "filename"
+        ]
+      },
+      "JobResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ProgressOut"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetOut"
+            }
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricOut"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "error_message": {
+            "type": "string",
+            "nullable": true
+          },
+          "upload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresignedUploadOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lyrics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnhancedLRC"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "progress",
+          "assets",
+          "metrics",
+          "created_at",
+          "updated_at",
+          "error_message"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ]
+      },
+      "ASRWebhookPayload": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "transcript": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "transcript"
+        ]
+      },
+      "ASRWebhookResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      }
+    }
+  }
+}

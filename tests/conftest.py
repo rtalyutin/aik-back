@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from typing import Optional
 
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
@@ -23,7 +22,7 @@ def pytest_configure(config: Config) -> None:
     )
 
 
-def pytest_pyfunc_call(pyfuncitem: Function) -> Optional[bool]:
+def pytest_pyfunc_call(pyfuncitem: Function) -> bool | None:
     plugin_manager = pyfuncitem.config.pluginmanager
     if plugin_manager.hasplugin("asyncio"):
         return None

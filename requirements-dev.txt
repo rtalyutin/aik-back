@@ -1,3 +1,6 @@
+black>=23.9,<24.0
 httpx>=0.25,<0.26
+mypy>=1.6,<1.7
 pytest>=7.4,<8.0
 pytest-asyncio>=0.21,<0.22
+ruff>=0.1,<0.2

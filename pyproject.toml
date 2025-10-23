@@ -5,6 +5,9 @@ target-version = ["py311"]
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+
+[tool.ruff.lint]
+preview = false
 select = [
     "E",   # pycodestyle errors
     "F",   # Pyflakes
@@ -15,9 +18,6 @@ select = [
 ignore = [
     "E501",  # Line length handled by Black
 ]
-
-[tool.ruff.lint]
-preview = false
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

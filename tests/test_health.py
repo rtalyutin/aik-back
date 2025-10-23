@@ -6,7 +6,7 @@ app = app_module.app
 
 
 @pytest.mark.asyncio
-async def test_health_endpoint_returns_ok_status():
+async def test_health_endpoint_returns_ok_status() -> None:
     async with httpx.AsyncClient(app=app, base_url="http://testserver") as client:
         response = await client.get("/health")
 

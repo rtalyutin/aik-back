@@ -1,2 +1,1 @@
-# Runtime dependencies are managed through pyproject.toml.
-# This file remains for CI compatibility.
+uvicorn[standard]>=0.25,<0.29

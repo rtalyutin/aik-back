@@ -11,7 +11,9 @@ app = app_module.app
 
 
 @pytest.mark.asyncio()
-async def test_health_endpoint_all_dependencies_up(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_health_endpoint_all_dependencies_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def stub_s3() -> dict[str, object]:
         await asyncio.sleep(0)
         return {"status": "up", "latency_ms": 12}
@@ -116,4 +118,3 @@ def test_truncate_utility_trims_long_messages() -> None:
     truncated = app_module._truncate(message, limit=120)
     assert truncated.startswith("x" * 120)
     assert truncated.endswith("...(+truncated)")
-

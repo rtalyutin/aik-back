@@ -168,9 +168,7 @@ async def _health_payload() -> tuple[int, list[tuple[bytes, bytes]], bytes]:
 
     dependencies = {"s3": s3_result, "asr": asr_result, "aligner": aligner_result}
     critical = ("s3", "asr", "aligner")
-    any_issue = any(
-        dependencies[name]["status"] != "up" for name in critical
-    )
+    any_issue = any(dependencies[name]["status"] != "up" for name in critical)
 
     status = "up" if not any_issue else "down"
 
@@ -213,4 +211,3 @@ async def app(scope: Scope, receive: Receive, send: Send) -> None:
 
     await send({"type": "http.response.start", "status": 404, "headers": []})
     await send({"type": "http.response.body", "body": b""})
-

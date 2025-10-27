@@ -72,3 +72,26 @@ pip-audit -r requirements.txt -r requirements-dev.txt
 ```bash
 pytest
 ```
+
+## API
+
+### `GET /v1/health`
+
+Возвращает агрегированный статус критичных зависимостей (S3, ASR, Aligner).
+
+- Ответ `200 OK`, если все зависимости в состоянии `up`.
+- Ответ `503 Service Unavailable`, если хотя бы одна зависимость в состоянии `down` или `degraded`.
+
+```json
+{
+  "status": "up",
+  "time": "2025-10-27T00:00:00Z",
+  "deps": {
+    "s3": { "status": "up", "latency_ms": 12 },
+    "asr": { "status": "up", "latency_ms": 41, "version": "1.3.2" },
+    "aligner": { "status": "up", "latency_ms": 37, "version": "0.9.5" }
+  }
+}
+```
+
+Ответ содержит `latency_ms` для каждой проверки, усечённые сообщения об ошибках и, если сервис их сообщает, `version`.

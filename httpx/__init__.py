@@ -4,10 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import (
+    Awaitable,
+    Callable,
+    ItemsView,
+    Iterable,
+    Iterator,
+    Mapping,
+)
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Any
+from typing import Any, TypeVar, overload
 from urllib.parse import urlparse
 
 Scope = dict[str, Any]
@@ -15,13 +22,52 @@ Receive = Callable[[], Awaitable[dict[str, Any]]]
 Send = Callable[[dict[str, Any]], Awaitable[None]]
 
 
+_T = TypeVar("_T")
+
+
+class Headers(Mapping[str, str]):
+    """Case-insensitive header mapping compatible with httpx."""
+
+    def __init__(self, items: Iterable[tuple[bytes, bytes]]) -> None:
+        self._items = tuple((bytes(name), bytes(value)) for name, value in items)
+        self._store = {
+            name.decode("latin-1").lower(): value.decode("latin-1")
+            for name, value in self._items
+        }
+
+    def __getitem__(self, key: str) -> str:
+        return self._store[key.lower()]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._store)
+
+    def __len__(self) -> int:
+        return len(self._store)
+
+    @overload
+    def get(self, key: str, default: None = None) -> str | None: ...
+
+    @overload
+    def get(self, key: str, default: _T = ...) -> str | _T: ...
+
+    def get(self, key: str, default: _T | None = None) -> str | _T | None:
+        return self._store.get(key.lower(), default)
+
+    def items(self) -> ItemsView[str, str]:
+        return self._store.items()
+
+
 @dataclass(slots=True)
 class Response:
     """Simplified HTTP response object compatible with the test suite."""
 
     status_code: int
-    headers: tuple[tuple[bytes, bytes], ...]
+    raw_headers: tuple[tuple[bytes, bytes], ...]
     content: bytes
+
+    @property
+    def headers(self) -> Headers:
+        return Headers(self.raw_headers)
 
     def json(self) -> Any:
         """Parse the JSON response body."""
@@ -34,11 +80,13 @@ class AsyncClient:
     def __init__(
         self,
         *,
-        app: Callable[[Scope, Receive, Send], Awaitable[None]],
+        app: Callable[[Scope, Receive, Send], Awaitable[None]] | None = None,
         base_url: str = "",
+        timeout: float | None = None,
     ) -> None:
         self._app = app
         self._base_url = base_url.rstrip("/")
+        self._timeout = timeout
 
     async def __aenter__(self) -> AsyncClient:
         return self
@@ -91,6 +139,9 @@ class AsyncClient:
         async def send(message: dict[str, Any]) -> None:
             response_data.consume(message)
 
+        if self._app is None:
+            raise RuntimeError("No ASGI app configured for AsyncClient")
+
         await self._app(scope, receive, send)
 
         return response_data.build()
@@ -135,7 +186,9 @@ class ResponseBuilder:
     def build(self) -> Response:
         content = b"".join(self.body_parts)
         return Response(
-            status_code=self.status_code, headers=self.headers, content=content
+            status_code=self.status_code,
+            raw_headers=self.headers,
+            content=content,
         )
 
 

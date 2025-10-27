@@ -4,10 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping
+from collections.abc import (
+    Awaitable,
+    Callable,
+    ItemsView,
+    Iterable,
+    Iterator,
+    Mapping,
+)
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Any, ItemsView, TypeVar, overload
+from typing import Any, TypeVar, overload
 from urllib.parse import urlparse
 
 Scope = dict[str, Any]

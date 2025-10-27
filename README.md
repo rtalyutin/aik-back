@@ -98,4 +98,4 @@ pytest
 
 ## Архитектурный обзор пайплайна
 
-- [AIK Media Pipeline Overview](docs/pipeline.md) — последовательность загрузки ассетов, обработка и правила интеграции.
+- [AIK Media Pipeline Overview](docs/backend-pipeline.md) — последовательность загрузки ассетов, обработка и правила интеграции.

@@ -7,6 +7,7 @@ from application.job_matcher.ioc import JobMatcherDepsProvider
 from config import get_config
 from core.database.ioc import DatabaseDepsProvider
 from core.auth.ioc import AuthDepsProvider
+from core.file_storage.ioc import FileStorageDepsProvider
 from core.notifier.notifier import Notifier
 from core.notifier.tg_aiogram_notifier import TgAiogramNotifier
 
@@ -27,6 +28,7 @@ def make_ioc(with_fast_api: bool = False) -> AsyncContainer:
     providers: List[Provider] = [
         DatabaseDepsProvider(),
         JobMatcherDepsProvider(),
+        FileStorageDepsProvider(),
         CoreDepsProvider(),
     ]
     if with_fast_api:

@@ -20,3 +20,5 @@ wheels/
 
 # Database
 db/password.txt
+
+prompt.txt

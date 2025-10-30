@@ -67,6 +67,14 @@ class Config(BaseSettings):
     AUTH_JWT_SECRET: str = "x1rm1hyx4lo81x34z1nesctrjmvbigve"
     AUTH_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # S3 Configuration
+    S3_ENDPOINT_URL: str = "http://localhost:9000"
+    S3_ACCESS_KEY_ID: str = "minioadmin"
+    S3_SECRET_ACCESS_KEY: str = "minioadmin"
+    S3_BUCKET_NAME: str = "aik-back"
+    S3_REGION: str = "us-east-1"
+    S3_SECURE: bool = False
+
 
 @lru_cache
 def get_config() -> Config:

@@ -16,6 +16,7 @@ from logger import setup_logging
 from config import get_config
 from application.job_matcher import http as job_matcher_http
 from core.auth import auth_router
+from core.file_storage import file_storage_router
 
 config = get_config()
 setup_logging(config, service_name="api")
@@ -51,3 +52,4 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(job_matcher_http.job_matcher_resume_router, prefix="/api")
 app.include_router(job_matcher_http.job_matcher_statistic_router, prefix="/api")
 app.include_router(job_matcher_http.job_matcher_vacancy_router, prefix="/api")
+app.include_router(file_storage_router, prefix="/api")

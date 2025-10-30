@@ -1,0 +1,26 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.12-slim
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: List files
+        run: ls -la
+
+      - name: Run ruff format check
+        run: uv run ruff format --check
+
+      - name: Run ruff linting
+        run: uv run ruff check

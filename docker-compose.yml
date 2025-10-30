@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - aik-back-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=aik_back
+      - POSTGRES_DB=aik_back
+      - POSTGRES_PASSWORD=aik_back
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  redis:
+    image: redis
+    restart: always
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+    volumes:
+      - aik-back-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - aik-back-minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+volumes:
+  aik-back-db-data:
+  aik-back-redis-data:
+  aik-back-minio-data:

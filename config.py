@@ -75,6 +75,10 @@ class Config(BaseSettings):
     S3_REGION: str = "us-east-1"
     S3_SECURE: bool = False
 
+    # Karaoke Tracks
+    LALAL_AI_API_KEY: str = "your_lalal_ai_api_key"
+    ASSEMBLY_AI_API_KEY: str = "your_assemblyai_api_key"
+
 
 @lru_cache
 def get_config() -> Config:

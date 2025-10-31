@@ -5,16 +5,22 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from application.job_matcher.services import (
-    LLMService,
-)
+from application.job_matcher.services import LLMService
 from application.job_matcher.use_cases import (
     match_vacancies_with_resumes,
     check_vacancies_for_duplicates,
 )
+from application.karaoke_tracks.services.lalal_client import ILalalClient
+from application.karaoke_tracks.services.assemblyai_client import IAssemblyAIClient
+from background.karaoke_tasks import (
+    process_karaoke_track_splitting,
+    process_karaoke_transcription,
+)
+
 from config import get_config
 
 from core import ioc
+from core.file_storage.file_storage_service import FileStorageService
 from core.notifier.notifier import Notifier
 from logger import setup_logging
 
@@ -50,9 +56,17 @@ async def main():
     session_maker: async_sessionmaker[AsyncSession] = await container.get(
         async_sessionmaker[AsyncSession]
     )
+
+    # Получаем сервисы для job_matcher
     llm_service: LLMService = await container.get(LLMService)
 
+    # Получаем сервисы для karaoke tracks
+    lalal_client: ILalalClient = await container.get(ILalalClient)
+    assemblyai_client: IAssemblyAIClient = await container.get(IAssemblyAIClient)
+    file_storage_service = await container.get(FileStorageService)
+
     tasks = [
+        # Существующие задачи job_matcher
         asyncio.create_task(
             job_matcher_check_vacancies_for_duplicates(
                 session_maker, llm_service, notifier
@@ -61,6 +75,16 @@ async def main():
         asyncio.create_task(
             job_matcher_match_vacancies_with_resumes(
                 session_maker, llm_service, notifier
+            )
+        ),
+        asyncio.create_task(
+            process_karaoke_track_splitting(
+                session_maker, lalal_client, file_storage_service, notifier
+            )
+        ),
+        asyncio.create_task(
+            process_karaoke_transcription(
+                session_maker, assemblyai_client, file_storage_service, notifier
             )
         ),
     ]

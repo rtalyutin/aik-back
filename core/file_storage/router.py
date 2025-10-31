@@ -1,5 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Depends
 from fastapi.responses import Response
+from pydantic import BaseModel, HttpUrl
+from typing import Optional
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 
@@ -20,12 +22,52 @@ router = APIRouter(
 )
 
 
-class UploadFileResponse(BaseDataResponse):
-    data: dict
+# ✅ Типизированные модели для запросов
+class UploadFileFromUrlRequest(BaseModel):
+    url: HttpUrl
+    file_name: Optional[str] = None
 
 
-class FileUrlResponse(BaseDataResponse):
-    data: dict
+# ✅ Типизированные модели для ответов
+class UploadFileResponseData(BaseModel):
+    file_key: str
+    file_name: Optional[str]
+    content_type: Optional[str]
+    size: Optional[int]
+
+
+class UploadFileFromUrlResponseData(BaseModel):
+    file_key: str
+    source_url: str
+    file_name: Optional[str]
+
+
+class FileUrlResponseData(BaseModel):
+    file_key: str
+    url: str
+    expires_in: int
+
+
+class DeleteFileResponseData(BaseModel):
+    success: bool
+    message: str
+
+
+# ✅ Типизированные response models
+class UploadFileResponse(BaseDataResponse[UploadFileResponseData]):
+    pass
+
+
+class UploadFileFromUrlResponse(BaseDataResponse[UploadFileFromUrlResponseData]):
+    pass
+
+
+class FileUrlResponse(BaseDataResponse[FileUrlResponseData]):
+    pass
+
+
+class DeleteFileResponse(BaseDataResponse[DeleteFileResponseData]):
+    pass
 
 
 @router.post(
@@ -53,18 +95,18 @@ async def upload_file(
     )
 
     return UploadFileResponse(
-        data={
-            "file_key": file_key,
-            "file_name": file.filename,
-            "content_type": file.content_type,
-            "size": len(file_content),
-        }
+        data=UploadFileResponseData(
+            file_key=file_key,
+            file_name=file.filename,
+            content_type=file.content_type,
+            size=len(file_content),
+        )
     )
 
 
 @router.post(
     "/upload-from-url",
-    response_model=UploadFileResponse,
+    response_model=UploadFileFromUrlResponse,
     responses=get_responses_for_exceptions(
         FileUploadError,
         FileStorageError,
@@ -75,15 +117,20 @@ async def upload_file(
 )
 @inject
 async def upload_file_from_url(
-    url: str,
-    file_name: str = None,
+    request: UploadFileFromUrlRequest,
     file_storage_service: FromDishka[FileStorageService] = FromDishka(),
-) -> UploadFileResponse:
+) -> UploadFileFromUrlResponse:
     """Загрузка файла в S3 по URL"""
-    file_key = await file_storage_service.upload_file_from_url(url, file_name)
+    file_key = await file_storage_service.upload_file_from_url(
+        str(request.url), request.file_name
+    )
 
-    return UploadFileResponse(
-        data={"file_key": file_key, "source_url": url, "file_name": file_name}
+    return UploadFileFromUrlResponse(
+        data=UploadFileFromUrlResponseData(
+            file_key=file_key,
+            source_url=str(request.url),
+            file_name=request.file_name,
+        )
     )
 
 
@@ -133,12 +180,17 @@ async def get_file_url(
     url = await file_storage_service.get_file_url(file_key, expires_in)
 
     return FileUrlResponse(
-        data={"file_key": file_key, "url": url, "expires_in": expires_in}
+        data=FileUrlResponseData(
+            file_key=file_key,
+            url=url,
+            expires_in=expires_in,
+        )
     )
 
 
 @router.delete(
     "/{file_key}",
+    response_model=DeleteFileResponse,
     responses=get_responses_for_exceptions(
         FileNotFoundError,
         FileStorageError,
@@ -151,13 +203,13 @@ async def get_file_url(
 async def delete_file(
     file_key: str,
     file_storage_service: FromDishka[FileStorageService] = FromDishka(),
-) -> BaseDataResponse:
+) -> DeleteFileResponse:
     """Удаление файла из S3"""
     success = await file_storage_service.delete_file(file_key)
 
-    return BaseDataResponse(
-        data={
-            "success": success,
-            "message": f"File {file_key} deleted successfully",
-        }
+    return DeleteFileResponse(
+        data=DeleteFileResponseData(
+            success=success,
+            message=f"File {file_key} deleted successfully",
+        )
     )

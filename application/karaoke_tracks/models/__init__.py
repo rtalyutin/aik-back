@@ -2,8 +2,10 @@ from application.karaoke_tracks.models.models import (
     KaraokeTrack,
     TrackCreatingTask,
     TrackCreatingTaskLog,
+    TrackCreatingTaskStep,
     TrackCreatingTaskStatus,
-    TrackCreatingTaskLogStep,
+    TrackCreatingTaskStepStatus,
+    TrackCreatingTaskStepType,
     TranscriptItem,
 )
 
@@ -11,7 +13,9 @@ __all__ = [
     "KaraokeTrack",
     "TrackCreatingTask",
     "TrackCreatingTaskLog",
+    "TrackCreatingTaskStep",
     "TrackCreatingTaskStatus",
-    "TrackCreatingTaskLogStep",
+    "TrackCreatingTaskStepStatus",
+    "TrackCreatingTaskStepType",
     "TranscriptItem",
 ]

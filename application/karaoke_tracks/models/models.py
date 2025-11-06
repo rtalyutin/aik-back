@@ -15,23 +15,24 @@ from core.models.fields import uuid_pk, optional_date_time_tz, PydanticListType
 
 class TrackCreatingTaskStatus(str, enum.Enum):
     CREATED = "created"
-    SPLIT_STARTED = "split_started"
-    SPLIT_ITERATION_FAILED = "split_iteration_failed"
-    SPLIT_FINAL_FAILED = "split_final_failed"
+    IN_SPLIT_PROCESS = "in_split_process"
     SPLIT_COMPLETED = "split_completed"
-    TRANSCRIPT_STARTED = "transcript_started"
-    TRANSCRIPT_ITERATION_FAILED = "transcript_iteration_failed"
-    TRANSCRIPT_FINAL_FAILED = "transcript_final_failed"
+    IN_TRANSCRIPT_PROCESS = "in_transcript_process"
     COMPLETED = "completed"
+    FAILED = "failed"
 
 
-class TrackCreatingTaskLogStep(str, enum.Enum):
-    SPLIT_START = "split_start"
-    SPLIT_SUCCESS = "split_success"
-    SPLIT_ERROR = "split_error"
-    TRANSCRIPT_START = "transcript_start"
-    TRANSCRIPT_SUCCESS = "transcript_success"
-    TRANSCRIPT_ERROR = "transcript_error"
+class TrackCreatingTaskStepType(str, enum.Enum):
+    SPLIT = "split"
+    TRANSCRIPT = "transcript"
+
+
+class TrackCreatingTaskStepStatus(str, enum.Enum):
+    INIT = "init"
+    IN_PROCESS = "in_process"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    FINAL_FAILED = "final_failed"
 
 
 class TranscriptItem(BaseModel):
@@ -71,28 +72,51 @@ class TrackCreatingTask(Base):
     vocal_file: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     instrumental_file: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     lang_code: Mapped[str] = mapped_column(String(10), nullable=False)
-    transcript: Mapped[Optional[List[TranscriptItem]]] = mapped_column(
-        PydanticListType(TranscriptItem), nullable=True
-    )
-
     status: Mapped[TrackCreatingTaskStatus] = mapped_column(
         Enum(TrackCreatingTaskStatus, native_enum=False),
         default=TrackCreatingTaskStatus.CREATED,
         nullable=False,
     )
 
-    split_at: Mapped[optional_date_time_tz]
-    split_retries: Mapped[Optional[int]] = mapped_column(Integer, default=0)
-
-    transcribed_at: Mapped[optional_date_time_tz]
-    transcript_retries: Mapped[Optional[int]] = mapped_column(Integer, default=0)
-
     # Связи
     result_track: Mapped[Optional["KaraokeTrack"]] = relationship(
         "KaraokeTrack", back_populates="creating_task", foreign_keys=[result_track_id]
     )
+    steps: Mapped[List["TrackCreatingTaskStep"]] = relationship(
+        "TrackCreatingTaskStep", back_populates="task", cascade="all, delete-orphan"
+    )
     logs: Mapped[List["TrackCreatingTaskLog"]] = relationship(
         "TrackCreatingTaskLog", back_populates="task", cascade="all, delete-orphan"
+    )
+
+
+class TrackCreatingTaskStep(Base):
+    __tablename__ = "karaoke_track_creating_task_steps"
+
+    id: Mapped[uuid_pk]
+    task_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("karaoke_track_creating_tasks.id"),
+        nullable=False,
+    )
+    data: Mapped[Optional[Any]] = mapped_column(JSONB, nullable=True)
+    step: Mapped[TrackCreatingTaskStepType] = mapped_column(
+        Enum(TrackCreatingTaskStepType, native_enum=False),
+        nullable=False,
+    )
+    status: Mapped[TrackCreatingTaskStepStatus] = mapped_column(
+        Enum(TrackCreatingTaskStepStatus, native_enum=False),
+        nullable=False,
+    )
+    retries: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    processed_at: Mapped[optional_date_time_tz]
+
+    # Связи
+    task: Mapped["TrackCreatingTask"] = relationship(
+        "TrackCreatingTask", back_populates="steps"
+    )
+    logs: Mapped[List["TrackCreatingTaskLog"]] = relationship(
+        "TrackCreatingTaskLog", back_populates="step", cascade="all, delete-orphan"
     )
 
 
@@ -105,9 +129,9 @@ class TrackCreatingTaskLog(Base):
         ForeignKey("karaoke_track_creating_tasks.id"),
         nullable=False,
     )
-    step: Mapped[TrackCreatingTaskLogStep] = mapped_column(
-        Enum(TrackCreatingTaskLogStep, native_enum=False),
-        default=TrackCreatingTaskLogStep.SPLIT_START,
+    step_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("karaoke_track_creating_task_steps.id"),
         nullable=False,
     )
     data: Mapped[Any] = mapped_column(JSONB, nullable=False)
@@ -115,4 +139,7 @@ class TrackCreatingTaskLog(Base):
     # Связи
     task: Mapped["TrackCreatingTask"] = relationship(
         "TrackCreatingTask", back_populates="logs"
+    )
+    step: Mapped["TrackCreatingTaskStep"] = relationship(
+        "TrackCreatingTaskStep", back_populates="logs"
     )

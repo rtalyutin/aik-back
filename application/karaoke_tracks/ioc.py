@@ -14,7 +14,11 @@ class KaraokeTracksDepsProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_lalal_client(self: Self) -> ILalalClient:
         config = get_config()
-        return LalalClient(api_key=config.LALAL_AI_API_KEY)
+        return LalalClient(
+            api_key=config.LALAL_AI_API_KEY,
+            base_url=config.LALAL_AI_BASE_URL,
+            timeout=config.LALAL_AI_TIMEOUT,
+        )
 
     @provide(scope=Scope.APP)
     async def get_assemblyai_client(self: Self) -> IAssemblyAIClient:

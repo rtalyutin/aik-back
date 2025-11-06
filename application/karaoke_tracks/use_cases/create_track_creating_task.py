@@ -53,8 +53,6 @@ async def create_track_creating_task(
             base_track_file=file_key,
             lang_code=lang_code,
             status=TrackCreatingTaskStatus.CREATED,
-            split_retries=0,
-            transcript_retries=0,
         )
 
         uow.session.add(task)

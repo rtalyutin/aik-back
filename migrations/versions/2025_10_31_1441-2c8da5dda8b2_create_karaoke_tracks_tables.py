@@ -53,12 +53,7 @@ def upgrade() -> None:
         sa.Column("vocal_file", sa.String(), nullable=True),
         sa.Column("instrumental_file", sa.String(), nullable=True),
         sa.Column("lang_code", sa.String(length=10), nullable=False),
-        sa.Column("transcript", JSONB(), nullable=True),
         sa.Column("status", sa.String(50), nullable=False),
-        sa.Column("split_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("split_retries", sa.Integer(), nullable=True),
-        sa.Column("transcribed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("transcript_retries", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -74,15 +69,18 @@ def upgrade() -> None:
         ),
     )
 
-    # Таблица логов
+    # Таблица задач
     op.create_table(
-        "karaoke_track_creating_task_logs",
+        "karaoke_track_creating_task_steps",
         sa.Column(
             "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
         ),
-        sa.Column("task_id", sa.UUID(), nullable=False),
+        sa.Column("task_id", sa.UUID()),
+        sa.Column("data", JSONB(), nullable=True),
         sa.Column("step", sa.String(50), nullable=False),
-        sa.Column("data", JSONB(), nullable=False),
+        sa.Column("status", sa.String(50), nullable=False),
+        sa.Column("retries", sa.Integer(), nullable=True),
+        sa.Column("processed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -98,8 +96,37 @@ def upgrade() -> None:
         ),
     )
 
+    # Таблица логов
+    op.create_table(
+        "karaoke_track_creating_task_logs",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("task_id", sa.UUID(), nullable=False),
+        sa.Column("step_id", sa.UUID(), nullable=False),
+        sa.Column("data", JSONB(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("id"),
+        sa.ForeignKeyConstraint(
+            ["task_id"],
+            ["karaoke_track_creating_tasks.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["step_id"],
+            ["karaoke_track_creating_task_steps.id"],
+        ),
+    )
+
 
 def downgrade() -> None:
     op.drop_table("karaoke_track_creating_task_logs")
     op.drop_table("karaoke_track_creating_tasks")
+    op.drop_table("karaoke_track_creating_task_steps")
     op.drop_table("karaoke_tracks")

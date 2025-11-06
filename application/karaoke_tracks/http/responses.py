@@ -37,12 +37,7 @@ class TrackCreatingTaskResponse(BaseModel):
             vocal_file=task.vocal_file,
             instrumental_file=task.instrumental_file,
             lang_code=task.lang_code,
-            transcript=task.transcript,
             status=task.status,
-            split_at=task.split_at,
-            split_retries=task.split_retries,
-            transcribed_at=task.transcribed_at,
-            transcript_retries=task.transcript_retries,
             created_at=task.created_at,
             updated_at=task.updated_at,
         )

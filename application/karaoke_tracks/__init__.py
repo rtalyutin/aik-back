@@ -3,7 +3,7 @@ from application.karaoke_tracks.models.models import (
     TrackCreatingTask,
     TrackCreatingTaskLog,
     TrackCreatingTaskStatus,
-    TrackCreatingTaskLogStep,
+    TrackCreatingTaskStep,
     TranscriptItem,
 )
 
@@ -12,6 +12,6 @@ __all__ = [
     "TrackCreatingTask",
     "TrackCreatingTaskLog",
     "TrackCreatingTaskStatus",
-    "TrackCreatingTaskLogStep",
+    "TrackCreatingTaskStep",
     "TranscriptItem",
 ]

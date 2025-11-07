@@ -80,7 +80,11 @@ class Config(BaseSettings):
     LALAL_AI_BASE_URL: str = "https://www.lalal.ai"
     LALAL_AI_TIMEOUT: int = 30
     LALAL_AI_GET_SPLIT_RESULT_THRESHOLD: int = 30
+
     ASSEMBLY_AI_API_KEY: str = "your_assemblyai_api_key"
+    ASSEMBLY_AI_BASE_URL: str = "https://api.assemblyai.com"
+    ASSEMBLY_AI_TIMEOUT: int = 30
+    ASSEMBLY_AI_GET_TRANSCRIPT_RESULT_THRESHOLD: int = 30
 
 
 @lru_cache

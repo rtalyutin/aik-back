@@ -10,8 +10,14 @@ from application.karaoke_tracks.use_cases.send_track_to_split import (
 from application.karaoke_tracks.use_cases.get_result_track_splitting import (
     get_result_track_splitting,
 )
-from application.karaoke_tracks.use_cases.process_transcription import (
-    process_transcription,
+from application.karaoke_tracks.use_cases.init_transcription import (
+    init_transcription,
+)
+from application.karaoke_tracks.use_cases.send_track_to_transcription import (
+    send_track_to_transcription,
+)
+from application.karaoke_tracks.use_cases.get_transcription_result import (
+    get_transcription_result,
 )
 
 __all__ = [
@@ -19,5 +25,7 @@ __all__ = [
     "init_track_splitting",
     "send_track_to_split",
     "get_result_track_splitting",
-    "process_transcription",
+    "init_transcription",
+    "send_track_to_transcription",
+    "get_transcription_result",
 ]

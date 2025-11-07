@@ -16,7 +16,9 @@ from background.karaoke_tasks import (
     process_karaoke_track_splitting_init,
     process_karaoke_track_splitting_send,
     process_karaoke_track_splitting_results,
-    process_karaoke_transcription,
+    process_karaoke_transcription_init,
+    process_karaoke_transcription_send,
+    process_karaoke_transcription_results,
 )
 
 from config import get_config
@@ -79,7 +81,7 @@ async def main():
                 session_maker, llm_service, notifier
             )
         ),
-        # Новые задачи karaoke tracks
+        # Задачи karaoke tracks - splitting
         asyncio.create_task(
             process_karaoke_track_splitting_init(session_maker, notifier)
         ),
@@ -93,8 +95,17 @@ async def main():
                 session_maker, lalal_client, file_storage_service, notifier
             )
         ),
+        # Задачи karaoke tracks - transcription
         asyncio.create_task(
-            process_karaoke_transcription(
+            process_karaoke_transcription_init(session_maker, notifier)
+        ),
+        asyncio.create_task(
+            process_karaoke_transcription_send(
+                session_maker, assemblyai_client, file_storage_service, notifier
+            )
+        ),
+        asyncio.create_task(
+            process_karaoke_transcription_results(
                 session_maker, assemblyai_client, file_storage_service, notifier
             )
         ),

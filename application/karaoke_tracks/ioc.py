@@ -23,4 +23,8 @@ class KaraokeTracksDepsProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_assemblyai_client(self: Self) -> IAssemblyAIClient:
         config = get_config()
-        return AssemblyAIClient(api_key=config.ASSEMBLY_AI_API_KEY)
+        return AssemblyAIClient(
+            api_key=config.ASSEMBLY_AI_API_KEY,
+            base_url=config.ASSEMBLY_AI_BASE_URL,
+            timeout=config.ASSEMBLY_AI_TIMEOUT,
+        )

@@ -1,19 +1,33 @@
-from application.karaoke_tracks.services.lalal_client import (
-    ILalalClient,
-    LalalClient,
-    VocalInstrumentalSeparationResult,
-)
 from application.karaoke_tracks.services.assemblyai_client import (
     IAssemblyAIClient,
     AssemblyAIClient,
-    TranscriptResult,
+)
+from application.karaoke_tracks.services.assemblyai_models import (
+    TranscriptResponse,
+    TranscriptStatus,
+    Word,
+    Utterance,
+    Entity,
+)
+from application.karaoke_tracks.services.assemblyai_exceptions import (
+    AssemblyAIError,
+    AssemblyAISubmitError,
+    AssemblyAIGetError,
+    AssemblyAITimeoutError,
+    AssemblyAITranscriptionError,
 )
 
 __all__ = [
-    "ILalalClient",
-    "LalalClient",
-    "VocalInstrumentalSeparationResult",
     "IAssemblyAIClient",
     "AssemblyAIClient",
-    "TranscriptResult",
+    "TranscriptResponse",
+    "TranscriptStatus",
+    "Word",
+    "Utterance",
+    "Entity",
+    "AssemblyAIError",
+    "AssemblyAISubmitError",
+    "AssemblyAIGetError",
+    "AssemblyAITimeoutError",
+    "AssemblyAITranscriptionError",
 ]

@@ -1,6 +1,6 @@
 import enum
 import uuid
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 
 from sqlalchemy import UUID, String, Integer, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
@@ -99,7 +99,7 @@ class TrackCreatingTaskStep(Base):
         ForeignKey("karaoke_track_creating_tasks.id"),
         nullable=False,
     )
-    data: Mapped[Optional[Any]] = mapped_column(JSONB, nullable=True)
+    data: Mapped[Optional[Any | Dict]] = mapped_column(JSONB, nullable=True)
     step: Mapped[TrackCreatingTaskStepType] = mapped_column(
         Enum(TrackCreatingTaskStepType, native_enum=False),
         nullable=False,

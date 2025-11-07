@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
 revision: str = "2c8da5dda8b2"
-down_revision: Union[str, None] = "9d08d40f4a35"
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -127,6 +127,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("karaoke_track_creating_task_logs")
-    op.drop_table("karaoke_track_creating_tasks")
     op.drop_table("karaoke_track_creating_task_steps")
+    op.drop_table("karaoke_track_creating_tasks")
     op.drop_table("karaoke_tracks")

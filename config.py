@@ -56,10 +56,6 @@ class Config(BaseSettings):
     TG_BOT_TOKEN: str
     TG_CHANNEL_ID: int
 
-    JOB_MATCHER_LLM: JobMatcherLLMType = JobMatcherLLMType.dummy
-    JOB_MATCHER_MIN_SCORE_FOR_RECOMMENDED_MATCH: int = 7
-    JOB_MATCHER_MIN_SCORE_FOR_DUPLICATE: int = 7
-
     AUTH_BASE_LOGIN: str = "admin"
     AUTH_BASE_PASSWORD_HASH: str = (
         "$2a$12$4VLEFdgXE91AvPdM4nw3PuyhaBa74JBHi6RoOGnIEhXLIrTPuSlXm"  # admin_pass

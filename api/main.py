@@ -14,7 +14,6 @@ from core.handlers.handlers import core_register_api_handlers
 from logger import setup_logging
 
 from config import get_config
-from application.job_matcher import http as job_matcher_http
 from application.karaoke_tracks import http as karaoke_tracks_http
 from core.auth import auth_router
 from core.file_storage import file_storage_router
@@ -50,8 +49,5 @@ app.add_middleware(
 
 
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-app.include_router(job_matcher_http.job_matcher_resume_router, prefix="/api")
-app.include_router(job_matcher_http.job_matcher_statistic_router, prefix="/api")
-app.include_router(job_matcher_http.job_matcher_vacancy_router, prefix="/api")
 app.include_router(karaoke_tracks_http.karaoke_tracks_router, prefix="/api")
 app.include_router(file_storage_router, prefix="/api")

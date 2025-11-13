@@ -14,8 +14,7 @@ from application.karaoke_tracks.models.models import (
     TrackCreatingTaskStepType,
     TrackCreatingTaskStepStatus,
     TrackCreatingTaskLog,
-    KaraokeTrack,
-    TranscriptItem,
+    WordItem,
 )
 from application.karaoke_tracks.services import TranscriptStatus
 from application.karaoke_tracks.services.assemblyai_client import IAssemblyAIClient
@@ -130,16 +129,16 @@ async def _process_completed_transcription(
     """Обработка успешно завершенной транскрипции"""
     try:
         # Преобразуем результаты в наш формат
-        transcript_items = []
-        if get_result.response.utterances:
-            for utterance in get_result.response.utterances:
-                transcript_items.append(
-                    TranscriptItem(
-                        text=utterance.text,
-                        start=utterance.start,
-                        end=utterance.end,
-                        confidence=utterance.confidence,
-                        speaker=utterance.speaker,
+        word_items = []
+        if get_result.response.words:
+            for word in get_result.response.words:
+                word_items.append(
+                    WordItem(
+                        text=word.text,
+                        start=word.start,
+                        end=word.end,
+                        confidence=word.confidence,
+                        speaker=word.speaker,
                     )
                 )
 
@@ -167,25 +166,8 @@ async def _process_completed_transcription(
                 return
 
             # Обновляем задачу
-            locked_step.task.status = TrackCreatingTaskStatus.COMPLETED
-            locked_step.task.transcript = transcript_items
-
-            # Создаем или обновляем трек
-            if locked_step.task.result_track:
-                # Обновляем существующий трек
-                locked_step.task.result_track.transcript = transcript_items
-            else:
-                # Создаем новый трек
-                track = KaraokeTrack(
-                    base_track_file=locked_step.task.base_track_file,
-                    vocal_file=locked_step.task.vocal_file,
-                    instrumental_file=locked_step.task.instrumental_file,
-                    lang_code=locked_step.task.lang_code,
-                    transcript=transcript_items,
-                )
-                session.add(track)
-                await session.flush()
-                locked_step.task.result_track_id = track.id
+            locked_step.task.status = TrackCreatingTaskStatus.TRANSCRIPT_COMPLETED
+            locked_step.task.words = word_items
 
             # Завершаем шаг
             locked_step.status = TrackCreatingTaskStepStatus.COMPLETED
@@ -193,7 +175,7 @@ async def _process_completed_transcription(
             locked_step.data = {
                 **locked_step.data,
                 "completed_at": datetime.now(timezone.utc).isoformat(),
-                "utterances_count": len(transcript_items),
+                "utterances_count": len(word_items),
                 "get_api_context": get_result.context.model_dump(),
             }
 
@@ -204,7 +186,7 @@ async def _process_completed_transcription(
                 data={
                     "message": "Successfully processed transcription result",
                     "transcript_id": locked_step.data.get("transcript_id"),
-                    "utterances_count": len(transcript_items),
+                    "words_count": len(word_items),
                     "get_api_context": get_result.context.model_dump(),
                 },
             )
@@ -216,7 +198,7 @@ async def _process_completed_transcription(
                 f"Successfully processed transcription result for task {locked_step.task_id}",
                 extra={
                     "task_id": locked_step.task_id,
-                    "utterances_count": len(transcript_items),
+                    "words_count": len(word_items),
                     "get_api_context": get_result.context.model_dump(),
                 },
             )

@@ -14,6 +14,9 @@ from background.karaoke_tasks import (
     process_karaoke_transcription_init,
     process_karaoke_transcription_send,
     process_karaoke_transcription_results,
+    process_karaoke_subtitles_init,
+    process_karaoke_subtitles_results,
+    process_karaoke_final_track_creation,
 )
 
 from config import get_config
@@ -89,6 +92,15 @@ async def main():
             process_karaoke_transcription_results(
                 session_maker, assemblyai_client, file_storage_service, notifier
             )
+        ),
+        asyncio.create_task(process_karaoke_subtitles_init(session_maker, notifier)),
+        asyncio.create_task(
+            process_karaoke_subtitles_results(
+                session_maker, assemblyai_client, notifier
+            )
+        ),
+        asyncio.create_task(
+            process_karaoke_final_track_creation(session_maker, notifier)
         ),
     ]
 

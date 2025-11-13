@@ -52,6 +52,8 @@ def upgrade() -> None:
         sa.Column("result_track_id", sa.UUID(), nullable=True),
         sa.Column("vocal_file", sa.String(), nullable=True),
         sa.Column("instrumental_file", sa.String(), nullable=True),
+        sa.Column("words", JSONB(), nullable=True),
+        sa.Column("subtitles", JSONB(), nullable=True),
         sa.Column("lang_code", sa.String(length=10), nullable=False),
         sa.Column("status", sa.String(50), nullable=False),
         sa.Column(
@@ -103,7 +105,7 @@ def upgrade() -> None:
             "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
         ),
         sa.Column("task_id", sa.UUID(), nullable=False),
-        sa.Column("step_id", sa.UUID(), nullable=False),
+        sa.Column("step_id", sa.UUID(), nullable=True),
         sa.Column("data", JSONB(), nullable=False),
         sa.Column(
             "created_at",

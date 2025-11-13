@@ -19,6 +19,15 @@ from application.karaoke_tracks.use_cases.send_track_to_transcription import (
 from application.karaoke_tracks.use_cases.get_transcription_result import (
     get_transcription_result,
 )
+from application.karaoke_tracks.use_cases.init_subtitles import (
+    init_subtitles,
+)
+from application.karaoke_tracks.use_cases.get_subtitles_result import (
+    get_subtitles_result,
+)
+from application.karaoke_tracks.use_cases.create_final_track import (
+    create_final_track,
+)
 
 __all__ = [
     "create_track_creating_task",
@@ -28,4 +37,7 @@ __all__ = [
     "init_transcription",
     "send_track_to_transcription",
     "get_transcription_result",
+    "init_subtitles",
+    "get_subtitles_result",
+    "create_final_track",
 ]

@@ -18,6 +18,9 @@ class TrackCreatingTaskStatus(str, enum.Enum):
     IN_SPLIT_PROCESS = "in_split_process"
     SPLIT_COMPLETED = "split_completed"
     IN_TRANSCRIPT_PROCESS = "in_transcript_process"
+    TRANSCRIPT_COMPLETED = "transcript_completed"
+    IN_SUBTITLES_PROCESS = "in_subtitles_process"
+    SUBTITLES_COMPLETED = "subtitles_completed"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -25,6 +28,7 @@ class TrackCreatingTaskStatus(str, enum.Enum):
 class TrackCreatingTaskStepType(str, enum.Enum):
     SPLIT = "split"
     TRANSCRIPT = "transcript"
+    SUBTITLES = "subtitles"
 
 
 class TrackCreatingTaskStepStatus(str, enum.Enum):
@@ -39,8 +43,21 @@ class TranscriptItem(BaseModel):
     text: str = Field(description="Текст произнесенной фразы")
     start: int = Field(description="Время начала в миллисекундах")
     end: int = Field(description="Время окончания в миллисекундах")
+    words: List["WordItem"] = Field(description="Слова из фразы")
+
+
+class WordItem(BaseModel):
+    text: str = Field(description="Слово")
+    start: int = Field(description="Время начала в миллисекундах")
+    end: int = Field(description="Время окончания в миллисекундах")
     confidence: float = Field(description="Уверенность в распознавании", ge=0, le=1)
     speaker: Optional[str] = Field(description="Идентификатор говорящего", default=None)
+
+
+class SubtitleItem(BaseModel):
+    text: str = Field(description="Текст субтитра")
+    start: int = Field(description="Время начала в миллисекундах")
+    end: int = Field(description="Время окончания в миллисекундах")
 
 
 class KaraokeTrack(Base):
@@ -71,6 +88,12 @@ class TrackCreatingTask(Base):
     )
     vocal_file: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     instrumental_file: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    words: Mapped[Optional[List[WordItem]]] = mapped_column(
+        PydanticListType(WordItem), nullable=True
+    )
+    subtitles: Mapped[Optional[List[SubtitleItem]]] = mapped_column(
+        PydanticListType(SubtitleItem), nullable=True
+    )
     lang_code: Mapped[str] = mapped_column(String(10), nullable=False)
     status: Mapped[TrackCreatingTaskStatus] = mapped_column(
         Enum(TrackCreatingTaskStatus, native_enum=False),
@@ -129,10 +152,10 @@ class TrackCreatingTaskLog(Base):
         ForeignKey("karaoke_track_creating_tasks.id"),
         nullable=False,
     )
-    step_id: Mapped[uuid.UUID] = mapped_column(
+    step_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("karaoke_track_creating_task_steps.id"),
-        nullable=False,
+        nullable=True,
     )
     data: Mapped[Any] = mapped_column(JSONB, nullable=False)
 
@@ -140,6 +163,6 @@ class TrackCreatingTaskLog(Base):
     task: Mapped["TrackCreatingTask"] = relationship(
         "TrackCreatingTask", back_populates="logs"
     )
-    step: Mapped["TrackCreatingTaskStep"] = relationship(
+    step: Mapped[Optional["TrackCreatingTaskStep"]] = relationship(
         "TrackCreatingTaskStep", back_populates="logs"
     )

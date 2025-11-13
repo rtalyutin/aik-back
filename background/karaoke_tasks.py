@@ -2,6 +2,11 @@ import asyncio
 import logging
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
+from application.karaoke_tracks.use_cases import (
+    get_subtitles_result,
+    create_final_track,
+    init_subtitles,
+)
 from application.karaoke_tracks.use_cases.init_track_splitting import (
     init_track_splitting,
 )
@@ -294,3 +299,129 @@ async def process_karaoke_transcription_results(
                     context=f"{task_name} (iteration #{iteration})",
                 )
             await asyncio.sleep(30)
+
+
+async def process_karaoke_subtitles_init(
+    session_maker: async_sessionmaker[AsyncSession],
+    notifier: Notifier,
+):
+    """Фоновая задача для инициализации получения субтитров"""
+    iteration = 0
+    task_name = "process_karaoke_subtitles_init"
+
+    while True:
+        iteration += 1
+        logger.info(
+            "Processing karaoke subtitles initialization",
+            extra={"task": task_name, "iteration": iteration},
+        )
+
+        task = asyncio.create_task(init_subtitles(session_maker, notifier))
+
+        try:
+            await asyncio.shield(task)
+            await asyncio.sleep(10)  # Проверяем каждые 10 секунд
+        except asyncio.CancelledError:
+            logger.info(
+                "Task cancelled", extra={"task": task_name, "iteration": iteration}
+            )
+            if not task.done():
+                await task
+            break
+        except Exception as e:
+            logger.exception(
+                "Task failed",
+                extra={"task": task_name, "iteration": iteration},
+                exc_info=e,
+            )
+            if notifier:
+                await notifier.send_error_notification(
+                    error=e,
+                    context=f"{task_name} (iteration #{iteration})",
+                )
+            await asyncio.sleep(10)
+
+
+async def process_karaoke_subtitles_results(
+    session_maker: async_sessionmaker[AsyncSession],
+    assemblyai_client: IAssemblyAIClient,
+    notifier: Notifier,
+):
+    """Фоновая задача для получения результатов субтитров"""
+    iteration = 0
+    task_name = "process_karaoke_subtitles_results"
+
+    while True:
+        iteration += 1
+        logger.info(
+            "Processing karaoke subtitles results",
+            extra={"task": task_name, "iteration": iteration},
+        )
+
+        task = asyncio.create_task(
+            get_subtitles_result(session_maker, assemblyai_client, notifier)
+        )
+
+        try:
+            await asyncio.shield(task)
+            await asyncio.sleep(30)  # Проверяем каждые 30 секунд
+        except asyncio.CancelledError:
+            logger.info(
+                "Task cancelled", extra={"task": task_name, "iteration": iteration}
+            )
+            if not task.done():
+                await task
+            break
+        except Exception as e:
+            logger.exception(
+                "Task failed",
+                extra={"task": task_name, "iteration": iteration},
+                exc_info=e,
+            )
+            if notifier:
+                await notifier.send_error_notification(
+                    error=e,
+                    context=f"{task_name} (iteration #{iteration})",
+                )
+            await asyncio.sleep(30)
+
+
+async def process_karaoke_final_track_creation(
+    session_maker: async_sessionmaker[AsyncSession],
+    notifier: Notifier,
+):
+    """Фоновая задача для финального создания трека"""
+    iteration = 0
+    task_name = "process_karaoke_final_track_creation"
+
+    while True:
+        iteration += 1
+        logger.info(
+            "Processing karaoke final track creation",
+            extra={"task": task_name, "iteration": iteration},
+        )
+
+        task = asyncio.create_task(create_final_track(session_maker, notifier))
+
+        try:
+            await asyncio.shield(task)
+            await asyncio.sleep(10)  # Проверяем каждые 10 секунд
+        except asyncio.CancelledError:
+            logger.info(
+                "Task cancelled", extra={"task": task_name, "iteration": iteration}
+            )
+            if not task.done():
+                await task
+            break
+        except Exception as e:
+            logger.exception(
+                "Task failed",
+                extra={"task": task_name, "iteration": iteration},
+                exc_info=e,
+            )
+            if notifier:
+                await notifier.send_error_notification(
+                    error=e,
+                    context=f"{task_name} (iteration #{iteration})",
+                )
+            await asyncio.sleep(10)

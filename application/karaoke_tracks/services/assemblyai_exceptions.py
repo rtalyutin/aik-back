@@ -36,3 +36,17 @@ class AssemblyAITranscriptionError(AssemblyAIError):
 
     code = "assembly_ai_transcription_error"
     message = "Transcription failed in AssemblyAI"
+
+
+class AssemblyAISubtitlesError(AssemblyAIError):
+    """Ошибка получения субтитров"""
+
+    code = "assembly_ai_subtitles_error"
+    message = "Failed to get subtitles from AssemblyAI"
+
+
+class AssemblyAISubtitlesParseError(AssemblyAISubtitlesError):
+    """Ошибка парсинга субтитров"""
+
+    code = "assembly_ai_subtitles_parse_error"
+    message = "Failed to parse subtitles from AssemblyAI"

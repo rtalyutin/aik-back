@@ -246,6 +246,8 @@ class TranscriptParams(BaseModel):
         None, description="Модель распознавания"
     )
     punctuate: bool = Field(True, description="Расстановка пунктуации")
+    multichannel: bool = Field(True, description="Мультиканальность")
+    language_detection: bool = Field(True, description="Определение языка")
     content_safety: bool = Field(True, description="Расстановка пунктуации")
     format_text: bool = Field(True, description="Форматирование текста")
     disfluencies: bool = Field(False, description="Включение дисфлюенций")
@@ -317,4 +319,98 @@ class GetTranscriptResponseWithContext(BaseModel):
     """Ответ на получение транскрипции с контекстом"""
 
     response: TranscriptResponse
+    context: ApiResponseContext
+
+
+class SubtitleFormat(str, Enum):
+    SRT = "srt"
+    VTT = "vtt"
+
+
+class SubtitleItem(BaseModel):
+    """Модель элемента субтитров"""
+
+    time_start: int = Field(..., description="Время начала в миллисекундах")
+    time_end: int = Field(..., description="Время окончания в миллисекундах")
+    text: str = Field(..., description="Текст субтитров")
+
+    @classmethod
+    def from_vtt_block(cls, vtt_block: str) -> Optional["SubtitleItem"]:
+        """
+        Парсит блок VTT формата в SubtitleItem
+        Формат VTT:
+        HH:MM:SS.mmm --> HH:MM:SS.mmm
+        Текст субтитров
+        """
+        lines = vtt_block.strip().split("\n")
+        if len(lines) < 2:
+            return None
+
+        # Парсим временную метку
+        time_line = lines[0]
+        if " --> " not in time_line:
+            return None
+
+        start_str, end_str = time_line.split(" --> ")
+
+        # Парсим время в миллисекунды
+        start_ms = cls._parse_vtt_time(start_str.strip())
+        end_ms = cls._parse_vtt_time(end_str.strip())
+
+        # Объединяем текст (может быть многострочным)
+        text = "\n".join(lines[1:]).strip()
+
+        return cls(time_start=start_ms, time_end=end_ms, text=text)
+
+    @staticmethod
+    def _parse_vtt_time(time_str: str) -> int:
+        """
+        Парсит VTT время в миллисекунды
+        Форматы: HH:MM:SS.mmm или MM:SS.mmm
+        """
+        try:
+            # Убираем возможные пробелы
+            time_str = time_str.strip()
+
+            # Разделяем на компоненты времени и миллисекунды
+            if "." in time_str:
+                time_part, ms_part = time_str.split(".")
+                milliseconds = int(ms_part.ljust(3, "0")[:3])  # Обеспечиваем 3 цифры
+            else:
+                time_part = time_str
+                milliseconds = 0
+
+            # Разбираем компоненты времени
+            time_components = time_part.split(":")
+
+            if len(time_components) == 3:  # HH:MM:SS
+                hours = int(time_components[0])
+                minutes = int(time_components[1])
+                seconds = int(time_components[2])
+            elif len(time_components) == 2:  # MM:SS
+                hours = 0
+                minutes = int(time_components[0])
+                seconds = int(time_components[1])
+            else:
+                raise ValueError(f"Invalid time format: {time_str}")
+
+            total_ms = (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds
+            return total_ms
+
+        except (ValueError, IndexError) as e:
+            raise ValueError(f"Failed to parse VTT time: {time_str}") from e
+
+
+class SubtitlesResponse(BaseModel):
+    """Ответ с субтитрами"""
+
+    subtitles: List[SubtitleItem] = Field(..., description="Список элементов субтитров")
+    format: SubtitleFormat = Field(..., description="Формат субтитров")
+    raw_text: str = Field(..., description="Исходный текст субтитров")
+
+
+class GetSubtitlesResponseWithContext(BaseModel):
+    """Ответ на получение субтитров с контекстом"""
+
+    response: SubtitlesResponse
     context: ApiResponseContext

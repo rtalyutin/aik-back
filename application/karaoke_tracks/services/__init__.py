@@ -16,6 +16,7 @@ from application.karaoke_tracks.services.assemblyai_exceptions import (
     AssemblyAITimeoutError,
     AssemblyAITranscriptionError,
 )
+from application.karaoke_tracks.services.transcript_service import TranscriptService
 
 __all__ = [
     "IAssemblyAIClient",
@@ -30,4 +31,5 @@ __all__ = [
     "AssemblyAIGetError",
     "AssemblyAITimeoutError",
     "AssemblyAITranscriptionError",
+    "TranscriptService",
 ]
